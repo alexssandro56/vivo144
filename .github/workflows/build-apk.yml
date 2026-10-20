@@ -4,6 +4,9 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,3 +31,12 @@ jobs:
         with:
           name: vivo144-apk
           path: app/build/outputs/apk/debug/*.apk
+
+      # Direct APK download from the repo's Releases page (handy on the phone).
+      - name: Publish release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Vivo 144Hz build ${{ github.run_number }}
+          files: app/build/outputs/apk/debug/app-debug.apk
