@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:id="@+id/rate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="rate=?"
+            android:textSize="40sp"
+            android:textStyle="bold"
+            android:fontFamily="monospace"
+            android:paddingTop="24dp" />
+
+        <TextView
+            android:id="@+id/mode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Modo: ?" />
+
+        <TextView
+            android:id="@+id/reason"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:fontFamily="monospace"
+            android:textSize="12sp"
+            android:text="reason: ?" />
+
+        <TextView
+            android:id="@+id/modes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textSize="12sp"
+            android:alpha="0.7"
+            android:text="Taxas do painel: ?"
+            android:paddingBottom="20dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Taxa (Hz):"
+                android:paddingEnd="12dp" />
+
+            <EditText
+                android:id="@+id/fps"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:inputType="number"
+                android:maxLength="3" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/on"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_marginTop="12dp"
+            android:text="LIGAR (144on)"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/off"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:text="DESLIGAR (144off)"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/refresh"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Ler taxa atual" />
+
+        <Button
+            android:id="@+id/perm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Permitir Shizuku"
+            android:visibility="gone" />
+
+        <CheckBox
+            android:id="@+id/reapply"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Reaplicar depois de reiniciar o celular" />
+
+        <Button
+            android:id="@+id/overlay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Monitor flutuante de Hz: ligar" />
+
+        <Button
+            android:id="@+id/debloat"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Debloat CN (Shizuku)…" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:alpha="0.7"
+            android:text="Dica: adicione o bloco &quot;144 Hz&quot; nas Configurações Rápidas para ligar/desligar sem abrir o app.\n\nSe o reason mostrar reqFps:… o jogo está pedindo a própria taxa e o pedido dele vence o voto; nesse caso escolha 144 Hz/“Alta” dentro do jogo ou no Assistente de Jogo." />
+
+        <TextView
+            android:id="@+id/log"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:fontFamily="monospace"
+            android:textSize="12sp" />
+    </LinearLayout>
+</ScrollView>
