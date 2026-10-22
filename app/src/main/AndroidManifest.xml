@@ -4,6 +4,16 @@
 
     <!-- Permissions for Real-Time FPS Floating Overlay HUD -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- Missing upstream: without these, `pm grant ... WRITE_SECURE_SETTINGS` is refused. -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+
+    <!-- Lets the app see Shizuku (package visibility, Android 11+). -->
+    <queries>
+        <package android:name="moe.shizuku.privileged.api" />
+    </queries>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
