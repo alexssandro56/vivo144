@@ -1,0 +1,6 @@
+{
+  "name": "Vivo iQOO 144FPS Unlocker",
+  "description": "Performance & refresh rate utility for managing supported FPS and display refresh-rate configurations on compatible Vivo/iQOO devices.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
