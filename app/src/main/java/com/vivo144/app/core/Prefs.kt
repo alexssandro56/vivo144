@@ -30,6 +30,11 @@ object Prefs {
         get() = p.getBoolean("games_seeded", false)
         set(v) = p.edit().putBoolean("games_seeded", v).apply()
 
+    /** Automatic mode, outside games: 0 = release (vivo LTPO decides), else pin this rate. */
+    var idleFps: Int
+        get() = p.getInt("idle_fps", 0)
+        set(v) = p.edit().putInt("idle_fps", v).apply()
+
     var onBoot: Boolean
         get() = p.getBoolean("on_boot", true)
         set(v) = p.edit().putBoolean("on_boot", v).apply()

@@ -160,7 +160,7 @@ fun HomeScreen(resume: Int, snack: (String) -> Unit, goGames: () -> Unit, goSett
                 when (mode) {
                     Mode.OFF -> "A vivo decide a taxa (1–120 Hz). Melhor para bateria."
                     Mode.ALWAYS -> "Tela travada em $fps Hz em tudo, até você desligar. Gasta mais bateria."
-                    Mode.AUTO -> "Liga $fps Hz sozinho quando um jogo escolhido abre e volta ao LTPO quando você sai."
+                    Mode.AUTO -> "Liga $fps Hz sozinho quando um jogo escolhido abre e muda para a taxa de \"Fora dos jogos\" quando você sai."
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextDim,
@@ -208,6 +208,23 @@ fun HomeScreen(resume: Int, snack: (String) -> Unit, goGames: () -> Unit, goSett
                         style = MaterialTheme.typography.bodySmall, color = TextDim,
                     )
                 }
+            }
+            Section("Fora dos jogos") {
+                var idle by remember { mutableIntStateOf(Prefs.idleFps) }
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    (listOf(0) + rates.filter { it < fps }).forEach { r ->
+                        FilterChip(
+                            selected = idle == r,
+                            onClick = { idle = r; Prefs.idleFps = r },
+                            label = { Text(if (r == 0) "Automático (LTPO)" else "$r Hz", fontWeight = FontWeight.SemiBold) },
+                        )
+                    }
+                }
+                Text(
+                    if (idle == 0) "Ao sair do jogo, a vivo volta a decidir a taxa (1–120 Hz)."
+                    else "Ao sair do jogo, a tela fica fixa em $idle Hz.",
+                    style = MaterialTheme.typography.bodySmall, color = TextDim,
+                )
             }
             Section("Jogos no automático") {
                 Row(verticalAlignment = Alignment.CenterVertically) {

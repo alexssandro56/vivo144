@@ -54,6 +54,9 @@ class AutoService : Service() {
     private var lastQuery = 0L
     private var foreground: String? = null
     @Volatile private var voted: Boolean? = null   // null = unknown, enforce on next tick
+    @Volatile private var votedRate = -1
+
+    private fun idleText() = if (Prefs.idleFps == 0) "LTPO automático" else "${Prefs.idleFps} Hz"
     private var lastNotice = ""
     private var tick = 0
 
@@ -68,7 +71,7 @@ class AutoService : Service() {
     }
 
     private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
-        voted = null
+        voted = null; votedRate = -1
         ui.post { syncHud() }
     }
 
@@ -89,7 +92,7 @@ class AutoService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        voted = null
+        voted = null; votedRate = -1
         syncHud()
         return START_STICKY
     }
@@ -107,17 +110,20 @@ class AutoService : Service() {
         if (auto && Apps.hasUsageAccess(this)) {
             val fg = foregroundApp()
             val want = fg != null && fg in Prefs.games
-            if (want != voted) {
-                if (want) Rms.vote(Prefs.fps) else Rms.release()
+            // Game in front → game rate; otherwise the chosen idle rate (0 = let vivo decide).
+            val target = if (want) Prefs.fps else Prefs.idleFps
+            if (want != voted || target != votedRate) {
+                if (target == 0) Rms.release() else Rms.vote(target)
                 voted = want
-            } else if (want && tick % 10 == 0 && Rms.path != Rms.Path.DEX) {
-                Rms.vote(Prefs.fps) // cheap one-way refresh; same handle replaces the vote
+                votedRate = target
+            } else if (target != 0 && tick % 10 == 0 && Rms.path != Rms.Path.DEX) {
+                Rms.vote(target) // cheap one-way refresh; same handle replaces the vote
             }
             notice(
                 when {
                     want -> "${label(fg!!)} aberto → voto de ${Prefs.fps} Hz enviado"
-                    fg == null -> "Aguardando um jogo… (nenhum app detectado ainda)"
-                    else -> "Aguardando um jogo… (na frente: ${label(fg)})"
+                    fg == null -> "Fora do jogo → ${idleText()} (nenhum app detectado ainda)"
+                    else -> "Fora do jogo → ${idleText()} (na frente: ${label(fg)})"
                 }
             )
         } else if (auto) {
