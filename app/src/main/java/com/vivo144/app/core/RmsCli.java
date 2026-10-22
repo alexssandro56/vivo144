@@ -36,7 +36,7 @@ public final class RmsCli {
             d.writeInt(0);
             d.writeInt(0);
             d.writeInt(0);
-            d.writeInt(100);
+            d.writeInt(args.length > 3 ? Integer.parseInt(args[3]) : 100);
             d.writeInt(0);
             d.writeInt(0);
             d.writeInt(0);

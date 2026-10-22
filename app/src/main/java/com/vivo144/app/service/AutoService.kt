@@ -42,6 +42,11 @@ import com.vivo144.app.ui.MainActivity
  * optional HUD.
  */
 class AutoService : Service() {
+    companion object {
+        /** What the automatic mode is doing right now, for the Home screen. */
+        val status = kotlinx.coroutines.flow.MutableStateFlow("Parado")
+    }
+
     private lateinit var worker: HandlerThread
     private lateinit var bg: Handler
     private val ui = Handler(Looper.getMainLooper())
@@ -108,7 +113,13 @@ class AutoService : Service() {
             } else if (want && tick % 10 == 0 && Rms.path != Rms.Path.DEX) {
                 Rms.vote(Prefs.fps) // cheap one-way refresh; same handle replaces the vote
             }
-            notice(if (want) "${label(fg!!)} → ${Prefs.fps} Hz" else "Aguardando um jogo…")
+            notice(
+                when {
+                    want -> "${label(fg!!)} aberto → voto de ${Prefs.fps} Hz enviado"
+                    fg == null -> "Aguardando um jogo… (nenhum app detectado ainda)"
+                    else -> "Aguardando um jogo… (na frente: ${label(fg)})"
+                }
+            )
         } else if (auto) {
             notice("Falta liberar o acesso ao uso (Ajustes do app)")
         } else {
@@ -169,6 +180,7 @@ class AutoService : Service() {
     }
 
     private fun notice(text: String) {
+        status.value = text
         if (text == lastNotice) return
         lastNotice = text
         getSystemService(NotificationManager::class.java).notify(1, build(text))
@@ -216,6 +228,7 @@ class AutoService : Service() {
     }
 
     override fun onDestroy() {
+        status.value = "Parado"
         Prefs.unlisten(prefsListener)
         try { unregisterReceiver(screen) } catch (_: Throwable) { }
         bg.removeCallbacksAndMessages(null)

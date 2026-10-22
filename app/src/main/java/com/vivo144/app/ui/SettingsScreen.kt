@@ -51,6 +51,7 @@ fun SettingsScreen(resume: Int, snack: (String) -> Unit) {
     val battery = remember(key) { Apps.ignoresBattery(ctx) }
     var onBoot by remember { mutableStateOf(Prefs.onBoot) }
     var hud by remember { mutableStateOf(Prefs.hud) }
+    var high by remember { mutableStateOf(Prefs.highPriority) }
     var granting by remember { mutableStateOf(false) }
 
     LaunchedEffect(resume) { ShizukuState.refresh() }
@@ -114,7 +115,9 @@ fun SettingsScreen(resume: Int, snack: (String) -> Unit) {
             }
             PermRow("Notificações", "Aviso do modo automático", notif) { ctx.appDetails() }
             PermRow("Sem otimização de bateria", "Para a vivo não fechar o serviço", battery) {
-                ctx.open(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) || ctx.appDetails()
+                // vivo hides the app from the global list; ask for this app directly.
+                ctx.open(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:${ctx.packageName}"))) ||
+                    ctx.open(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) || ctx.appDetails()
             }
             PermRow("Início automático (vivo)", "Necessário para reaplicar após reiniciar", null) {
                 AUTOSTART.any { ctx.open(Intent().setComponent(it)) } || ctx.appDetails()
@@ -124,6 +127,14 @@ fun SettingsScreen(resume: Int, snack: (String) -> Unit) {
         Section("Comportamento") {
             ToggleRow("Reaplicar depois de reiniciar", "O voto da vivo some no reboot", onBoot) {
                 onBoot = it; Prefs.onBoot = it
+            }
+            ToggleRow(
+                "Prioridade máxima (teste)",
+                "Vota com prioridade 10000 em vez de 100. Veja se \"Quem controla a tela\" passa a mostrar Vivo144 dentro do jogo.",
+                high,
+            ) {
+                high = it; Prefs.highPriority = it
+                Engine.apply(ctx, snack)
             }
             ToggleRow("Indicador flutuante de Hz", "Mostra a taxa real por cima dos jogos", hud) {
                 if (it && !overlay) {

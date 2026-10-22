@@ -34,6 +34,11 @@ object Prefs {
         get() = p.getBoolean("on_boot", true)
         set(v) = p.edit().putBoolean("on_boot", v).apply()
 
+    /** Experimental: vote with a much higher priority, to test if it beats an app's own request. */
+    var highPriority: Boolean
+        get() = p.getBoolean("high_priority", false)
+        set(v) = p.edit().putBoolean("high_priority", v).apply()
+
     var hud: Boolean
         get() = p.getBoolean("hud", false)
         set(v) = p.edit().putBoolean("hud", v).apply()

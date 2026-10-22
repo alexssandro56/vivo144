@@ -183,14 +183,15 @@ fun HomeScreen(resume: Int, snack: (String) -> Unit, goGames: () -> Unit, goSett
             }
         }
 
-        if (reason?.startsWith("reqFps") == true) {
+        if (reason?.startsWith("reqFps") == true || reason?.startsWith("LayoutParams") == true) {
             Section("") {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Rounded.Warning, null, tint = Amber)
                     Spacer(Modifier.width(10.dp))
                     Text(
-                        "O app na frente está pedindo a própria taxa e o pedido dele vence. " +
-                            "Escolha a taxa máxima dentro do jogo ou no Assistente de Jogo.",
+                        "O jogo está pedindo a própria taxa pela janela dele (${reason?.substringAfterLast('|')} Hz), " +
+                            "e esse pedido vence o voto. Escolha a taxa máxima dentro do jogo ou teste " +
+                            "\"Prioridade máxima\" em Ajustes.",
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
@@ -198,6 +199,16 @@ fun HomeScreen(resume: Int, snack: (String) -> Unit, goGames: () -> Unit, goSett
         }
 
         if (mode == Mode.AUTO) {
+            val auto by com.vivo144.app.service.AutoService.status.collectAsState()
+            Section("Automático agora") {
+                Text(auto, style = MaterialTheme.typography.bodyMedium, color = if (auto == "Parado") Danger else Neon)
+                if (auto == "Parado") {
+                    Text(
+                        "O serviço não está rodando. Abra Ajustes e libere \"Sem otimização de bateria\" e \"Início automático\".",
+                        style = MaterialTheme.typography.bodySmall, color = TextDim,
+                    )
+                }
+            }
             Section("Jogos no automático") {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(

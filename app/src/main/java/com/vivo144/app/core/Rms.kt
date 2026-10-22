@@ -167,7 +167,7 @@ object Rms {
     /** Votes [fps] in the FixRate scene. Voting again with the same handle replaces it. */
     fun vote(fps: Int): Boolean {
         val b = binder()
-        if (b == null) return path == Path.DEX && dex("set $fps").ok
+        if (b == null) return path == Path.DEX && dex("set $fps ${if (Prefs.highPriority) 10000 else PRIORITY}").ok
         val d = Parcel.obtain()
         return try {
             d.writeLong(HANDLE)
@@ -179,7 +179,7 @@ object Rms {
             d.writeInt(0)         // dfps
             d.writeInt(0)         // configBits
             d.writeInt(0)         // states
-            d.writeInt(PRIORITY)
+            d.writeInt(if (Prefs.highPriority) 10000 else PRIORITY)
             d.writeInt(0)         // duration: until released
             d.writeInt(0)         // caller: system_server owns the vote
             d.writeInt(0)         // client
