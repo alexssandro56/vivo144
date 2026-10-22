@@ -132,12 +132,29 @@ object Rms {
         return r.out.takeIf { r.ok && it.isNotBlank() && it != "null" }
     }
 
-    /** The panel's own modes, highest first. */
-    fun panelRates(ctx: Context): List<Int> = try {
-        val dm = ctx.getSystemService(DisplayManager::class.java)
-        dm.getDisplay(Display.DEFAULT_DISPLAY).supportedModes
-            .map { Math.round(it.refreshRate) }.distinct().sortedDescending()
-    } catch (_: Throwable) {
-        emptyList()
+    /**
+     * Rates that can be pinned, highest first. OriginOS hides 144 Hz from the
+     * public display modes (it is a "private fps", persist.sys.private_fps),
+     * so those props are merged in, and 144 is always offered.
+     */
+    fun panelRates(ctx: Context): List<Int> {
+        val rates = sortedSetOf<Int>(compareByDescending { it })
+        try {
+            val dm = ctx.getSystemService(DisplayManager::class.java)
+            dm.getDisplay(Display.DEFAULT_DISPLAY).supportedModes.forEach { rates += Math.round(it.refreshRate) }
+        } catch (_: Throwable) { }
+        for (prop in listOf("persist.sys.private_fps", "persist.vivo.phone.fps_max")) {
+            getprop(prop).split(',', ' ', ';', ':')
+                .mapNotNull { it.trim().toFloatOrNull()?.let { f -> Math.round(f) } }
+                .filter { it in 60..240 }
+                .forEach { rates += it }
+        }
+        rates += 144
+        return rates.toList()
     }
+
+    private fun getprop(name: String): String = try {
+        val p = Runtime.getRuntime().exec(arrayOf("getprop", name))
+        p.inputStream.bufferedReader().use { it.readText() }.trim().also { p.waitFor() }
+    } catch (_: Throwable) { "" }
 }
