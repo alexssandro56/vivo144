@@ -1,0 +1,11 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- gauge ring -->
+    <path android:strokeColor="#FF243042" android:strokeWidth="5" android:strokeLineCap="round"
+        android:pathData="M37.7,70.3 A23,23 0 1,1 70.3,70.3" />
+    <path android:strokeColor="#FF3DFFB0" android:strokeWidth="5" android:strokeLineCap="round"
+        android:pathData="M37.7,70.3 A23,23 0 1,1 73.9,43" />
+    <!-- bolt -->
+    <path android:fillColor="#FF3DFFB0" android:pathData="M56.5,38L45,55h8.5l-2,15 12,-18h-8.5z" />
+</vector>
