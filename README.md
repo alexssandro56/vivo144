@@ -22,3 +22,20 @@ O bloco **144 Hz** das Configurações Rápidas alterna entre Desligado, Sempre 
 ## Build
 
 A cada push, o GitHub Actions compila o APK de release, assinado com `keystore/vivo144.jks`, e publica em **Releases**. Como a chave é fixa, cada build novo instala por cima do anterior.
+
+## Extras: brilho e botão Power (v3.1)
+
+Um serviço de acessibilidade (`UtilityAccessibilityService`) cuida de duas coisas:
+
+- **Botão Power:** quando o assistente da vivo abre com o Power segurado por cerca de 0,5 s, o serviço fecha o assistente (com BACK, HOME ou nenhuma ação, configurável) e abre o menu de energia nativo. Ele nunca intercepta teclas, então o print com Power + Volume − continua funcionando. O **modo descoberta**, que dura 30 s, mostra qual pacote abriu e deixa adicioná-lo à lista vigiada.
+- **Brilho:** uma janela de overlay de 1×1 px com `screenBrightness` e as chaves padrão `screen_brightness_mode`, `screen_brightness` (0–255) e `screen_brightness_float`. O app guarda os valores originais antes de mudar e os restaura depois.
+- **Laboratório:** testa apenas as 8 chaves de brilho da vivo listadas na especificação. Cada teste faz backup, lê o valor de volta, reverte sozinho e registra as mudanças.
+- **Blocos nas Configurações Rápidas:** 144 Hz, Brilho Turbo e Botão Power.
+
+O botão "Liberar tudo com 1 toque" do Shizuku concede `WRITE_SETTINGS` e `WRITE_SECURE_SETTINGS` e ativa o serviço de acessibilidade. O comando manual equivalente é:
+
+    pm grant com.vivo144.app android.permission.WRITE_SECURE_SETTINGS
+
+## Créditos
+
+A técnica de voto no serviço `rms` vem de [AndroPlus-org/vivo-HighRefresh-NoRoot](https://github.com/AndroPlus-org/vivo-HighRefresh-NoRoot), sob licença MIT, Copyright (c) AndroPlus.

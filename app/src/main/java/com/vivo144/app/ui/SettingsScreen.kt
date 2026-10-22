@@ -49,6 +49,9 @@ fun SettingsScreen(resume: Int, snack: (String) -> Unit) {
     val overlay = remember(key) { Apps.canOverlay(ctx) }
     val notif = remember(key) { Apps.canNotify(ctx) }
     val battery = remember(key) { Apps.ignoresBattery(ctx) }
+    val writeSettings = remember(key) { com.vivo144.app.core.SettingsIO.canWriteSystem(ctx) }
+    val secure = remember(key) { com.vivo144.app.core.SettingsIO.hasSecure(ctx) }
+    val access = remember(key) { com.vivo144.app.core.Access.enabled(ctx) }
     var onBoot by remember { mutableStateOf(Prefs.onBoot) }
     var hud by remember { mutableStateOf(Prefs.hud) }
     var high by remember { mutableStateOf(Prefs.highPriority) }
@@ -93,7 +96,7 @@ fun SettingsScreen(resume: Int, snack: (String) -> Unit) {
         }
 
         Section("Permissões do modo automático") {
-            if (shizuku == ShizukuState.Status.READY && !(usage && overlay && notif && battery)) {
+            if (shizuku == ShizukuState.Status.READY && !(usage && overlay && notif && battery && writeSettings && secure && access)) {
                 Button(
                     onClick = {
                         granting = true
@@ -118,6 +121,15 @@ fun SettingsScreen(resume: Int, snack: (String) -> Unit) {
                 // vivo hides the app from the global list; ask for this app directly.
                 ctx.open(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:${ctx.packageName}"))) ||
                     ctx.open(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) || ctx.appDetails()
+            }
+            PermRow("Alterar configurações do sistema", "Brilho (WRITE_SETTINGS)", writeSettings) {
+                ctx.open(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:${ctx.packageName}")))
+            }
+            PermRow("Configurações seguras (opcional)", "WRITE_SECURE_SETTINGS: laboratório e ativar a acessibilidade sozinho", secure) {
+                snack("Conceda pelo botão de 1 toque (Shizuku) ou rode: pm grant ${ctx.packageName} android.permission.WRITE_SECURE_SETTINGS")
+            }
+            PermRow("Serviço de acessibilidade", "Botão Power e overlay de brilho", access) {
+                ctx.open(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
             }
             PermRow("Início automático (vivo)", "Necessário para reaplicar após reiniciar", null) {
                 AUTOSTART.any { ctx.open(Intent().setComponent(it)) } || ctx.appDetails()

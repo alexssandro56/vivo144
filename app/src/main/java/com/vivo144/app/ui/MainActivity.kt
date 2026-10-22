@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Build
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -49,6 +50,7 @@ private val TABS = listOf(
     Tab("Início", Icons.Rounded.Home),
     Tab("Jogos", Icons.Rounded.PlayArrow),
     Tab("Debloat", Icons.Rounded.Delete),
+    Tab("Extras", Icons.Rounded.Build),
     Tab("Ajustes", Icons.Rounded.Settings),
 )
 
@@ -69,7 +71,7 @@ private fun Root(resume: Int) {
                         selected = tab == i,
                         onClick = { tab = i },
                         icon = { Icon(t.icon, null) },
-                        label = { Text(t.label) },
+                        label = { Text(t.label, maxLines = 1, softWrap = false) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = Bg,
                             indicatorColor = Neon,
@@ -82,9 +84,10 @@ private fun Root(resume: Int) {
     ) { pad ->
         Box(Modifier.fillMaxSize().padding(pad)) {
             when (tab) {
-                0 -> HomeScreen(resume, snack, goGames = { tab = 1 }, goSettings = { tab = 3 })
+                0 -> HomeScreen(resume, snack, goGames = { tab = 1 }, goSettings = { tab = 4 })
                 1 -> GamesScreen()
                 2 -> DebloatScreen(snack)
+                3 -> ToolsScreen(resume, snack)
                 else -> SettingsScreen(resume, snack)
             }
         }

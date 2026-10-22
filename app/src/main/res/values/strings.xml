@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">Vivo 144Hz</string>
     <string name="tile_label">144 Hz</string>
+    <string name="tile_brightness">Brilho Turbo</string>
+    <string name="tile_power">Botão Power</string>
+    <string name="accessibility_label">Vivo 144Hz: Power e brilho</string>
+    <string name="accessibility_description">Detecta a abertura do assistente da Vivo para exibir o menu de energia e hospeda o overlay de brilho. Não lê o conteúdo da tela nem intercepta teclas.</string>
 </resources>

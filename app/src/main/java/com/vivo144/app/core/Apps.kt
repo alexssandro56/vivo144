@@ -75,11 +75,15 @@ object Apps {
             "Notificações" to "pm grant $p android.permission.POST_NOTIFICATIONS",
             "Sem otimização de bateria" to "cmd deviceidle whitelist +$p",
             "Rodar em segundo plano" to "appops set $p RUN_ANY_IN_BACKGROUND allow",
+            "Alterar configurações do sistema" to "appops set $p WRITE_SETTINGS allow",
+            "Configurações seguras" to "pm grant $p android.permission.WRITE_SECURE_SETTINGS",
         )
         if (!Shell.ready()) return "Shizuku não está pronto."
-        return steps.joinToString("\n") { (name, cmd) ->
+        val lines = steps.map { (name, cmd) ->
             val r = Shell.exec(cmd)
             (if (r.ok) "✓ " else "✗ ") + name + if (r.ok) "" else " — ${r.all}"
         }
+        val acc = if (Access.enabled(ctx)) "✓ Acessibilidade" else "• " + Access.enable(ctx)
+        return (lines + acc).joinToString("\n")
     }
 }
