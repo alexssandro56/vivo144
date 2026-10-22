@@ -6,7 +6,6 @@ import android.os.IBinder
 import android.os.Parcel
 import android.provider.Settings
 import android.view.Display
-import rikka.shizuku.ShizukuBinderWrapper
 
 /**
  * vivo's "rms" binder (com.vivo.rms.IRM), spoken like the framework's own
@@ -45,6 +44,14 @@ object Rms {
 
     lateinit var app: Context
 
+    /** Service name; "rms" upstream, but some builds register it differently. */
+    @Volatile var name = "rms"
+        private set
+    /** Full report for "copy diagnostics". */
+    @Volatile var report = ""
+        private set
+    @Volatile private var discovered = false
+
     @Synchronized
     fun binder(): IBinder? {
         cached?.let { if (it.isBinderAlive) return it }
@@ -52,69 +59,76 @@ object Rms {
         if (path == Path.DEX && dexReady) return null
         // Don't hammer the lookup when nothing works.
         val now = System.currentTimeMillis()
-        if (path == Path.NONE && now - lastTry < 3000) return null
+        if (path == Path.NONE && now - lastTry < 5000) return null
         lastTry = now
         val notes = mutableListOf<String>()
+        val shizuku = ShizukuState.ready(1500)
+        val candidates = if (shizuku) discover(notes) else listOf("rms")
 
         // 1) Direct lookup from the app process.
-        try {
-            val b = Class.forName("android.os.ServiceManager")
-                .getMethod("getService", String::class.java)
-                .invoke(null, "rms") as IBinder?
-            when {
-                b == null -> notes += "direto: rms oculto para apps"
-                read(b) == null -> notes += "direto: rms não respondeu"
-                else -> { path = Path.DIRECT; diag = "Direto"; cached = b; return b }
-            }
-        } catch (t: Throwable) {
-            notes += "direto: ${t.cause ?: t}"
+        for (n in candidates) {
+            try {
+                val b = Class.forName("android.os.ServiceManager")
+                    .getMethod("getService", String::class.java)
+                    .invoke(null, n) as IBinder?
+                if (b != null && read(b) != null) {
+                    name = n; path = Path.DIRECT; diag = "Direto ($n)"; cached = b; return b
+                }
+            } catch (_: Throwable) { }
         }
+        notes += "direto: oculto para apps"
 
-        if (!ShizukuState.ready(1500)) {
+        if (!shizuku) {
             notes += "Shizuku indisponível"
             path = Path.NONE; diag = notes.joinToString(" · ")
             return null
         }
 
-        // 2) Ask servicemanager *through Shizuku*, so the lookup runs as shell.
-        try {
-            val raw = lookupViaShizuku("rms")
-            if (raw == null) {
-                notes += "shizuku: servicemanager não devolveu rms"
-            } else {
-                val w = ShizukuBinderWrapper(raw)
-                if (read(w) != null) {
-                    path = Path.SHIZUKU; diag = "Shizuku (busca como shell)"; cached = w; return w
-                }
-                notes += "shizuku: rms não respondeu"
+        // 2) Our own RmsCli through app_process as shell, like the official RmsVote CLI.
+        for (n in candidates) {
+            name = n
+            dexReady = false
+            if (prepareDex()) {
+                path = Path.DEX; diag = "Shell via app_process ($n)"
+                return null
             }
-        } catch (t: Throwable) {
-            notes += "shizuku: ${t.cause ?: t}"
+            notes += "shell[$n]: $dexError"
         }
-
-        // 3) Our own RmsCli through app_process as shell, like the official RmsVote CLI.
-        if (prepareDex()) {
-            path = Path.DEX; diag = "Shell via app_process"
-            return null
-        }
-        notes += "app_process: $dexError"
         path = Path.NONE; diag = notes.joinToString(" · ")
         return null
     }
 
-    private fun lookupViaShizuku(name: String): IBinder? {
-        val ctxObj = Class.forName("com.android.internal.os.BinderInternal")
-            .getMethod("getContextObject").invoke(null) as IBinder
-        val sm = Class.forName("android.os.IServiceManager\$Stub")
-            .getMethod("asInterface", IBinder::class.java)
-            .invoke(null, ShizukuBinderWrapper(ctxObj))!!
-        for (m in listOf("checkService", "getService", "checkService2", "getService2")) {
-            val r = try {
-                sm.javaClass.getMethod(m, String::class.java).invoke(sm, name)
-            } catch (_: NoSuchMethodException) { continue }
-            unwrap(r)?.let { return it }
+    /**
+     * Lists services as shell and picks the ones that look like vivo's refresh
+     * rate manager, so a renamed service is still found.
+     */
+    private fun discover(notes: MutableList<String>): List<String> {
+        val r = Shell.exec("service list")
+        // Lines look like: "123\trms: [com.vivo.rms.IRM]"
+        val entries = r.out.lineSequence().mapNotNull { line ->
+            val m = Regex("^\\s*\\d+\\s+([^:]+):\\s*\\[(.*)]").find(line) ?: return@mapNotNull null
+            m.groupValues[1].trim() to m.groupValues[2].trim()
+        }.toList()
+        val hits = entries.filter { (n, i) ->
+            n.equals("rms", true) || i.contains("rms", true) || i.endsWith(".IRM") ||
+                n.contains("rms", true) || n.contains("refresh", true) || i.contains("RefreshRate", true)
         }
-        return null
+        val related = entries.filter { (n, i) ->
+            Regex("rms|rrm|refresh|fps|vivo.*display|hz", RegexOption.IGNORE_CASE).containsMatchIn("$n $i")
+        }
+        report = buildString {
+            appendLine("service list: ${entries.size} serviços (exit ${r.code})")
+            appendLine("candidatos: " + hits.joinToString { "${it.first} [${it.second}]" }.ifEmpty { "nenhum" })
+            appendLine("relacionados:")
+            related.take(40).forEach { appendLine("  ${it.first} [${it.second}]") }
+            for (prop in listOf("persist.sys.private_fps", "persist.vivo.phone.fps_max", "debug.rms.refresh_rate_adjuster_version", "ro.build.version.release", "ro.product.model", "ro.build.display.id")) {
+                appendLine("$prop=${getprop(prop)}")
+            }
+            if (r.err.isNotEmpty()) appendLine("stderr: ${r.err.take(300)}")
+        }
+        notes += if (hits.isEmpty()) "nenhum serviço rms em ${entries.size}" else "achados: " + hits.joinToString { it.first }
+        discovered = true
+        return (hits.map { it.first } + "rms").distinct()
     }
 
     /** Android 16 may return a `Service` union instead of a bare IBinder. */
@@ -147,7 +161,7 @@ object Rms {
 
     private fun dex(args: String): Shell.Result {
         val apk = app.applicationInfo.sourceDir
-        return Shell.exec("CLASSPATH=${Shell.q(apk)} app_process /system/bin com.vivo144.app.core.RmsCli $args")
+        return Shell.exec("CLASSPATH=${Shell.q(apk)} app_process /system/bin com.vivo144.app.core.RmsCli ${Shell.q(name)} $args")
     }
 
     /** Votes [fps] in the FixRate scene. Voting again with the same handle replaces it. */

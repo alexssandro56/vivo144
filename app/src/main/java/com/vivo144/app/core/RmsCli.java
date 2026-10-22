@@ -5,7 +5,7 @@ import android.os.Parcel;
 
 /**
  * Entry point run as the shell user, through Shizuku:
- *   CLASSPATH=<this apk> app_process / com.vivo144.app.core.RmsCli set 144|release|get
+ *   CLASSPATH=<this apk> app_process / com.vivo144.app.core.RmsCli <service> set 144|release|get
  * Shell may look rms up even where SELinux hides it from apps. Same raw
  * Parcel layout as Rms.kt (no interface token, caller 0 = system_server).
  * Must not touch any app Context: there is no Application here.
@@ -15,15 +15,17 @@ public final class RmsCli {
     private static final long HANDLE = 900001L;
 
     public static void main(String[] args) throws Exception {
-        IBinder b = (IBinder) Class.forName("android.os.ServiceManager")
-            .getMethod("getService", String.class).invoke(null, "rms");
+        String name = args.length > 0 ? args[0] : "rms";
+        Class<?> sm = Class.forName("android.os.ServiceManager");
+        IBinder b = (IBinder) sm.getMethod("getService", String.class).invoke(null, name);
+        if (b == null) b = (IBinder) sm.getMethod("checkService", String.class).invoke(null, name);
         if (b == null) {
-            System.out.println("error=rms not found");
+            System.out.println("error=" + name + " not found");
             System.exit(2);
         }
-        String cmd = args.length > 0 ? args[0] : "get";
+        String cmd = args.length > 1 ? args[1] : "get";
         if (cmd.equals("set")) {
-            int fps = Integer.parseInt(args[1]);
+            int fps = Integer.parseInt(args[2]);
             Parcel d = Parcel.obtain();
             d.writeLong(HANDLE);
             d.writeString("FixRate");

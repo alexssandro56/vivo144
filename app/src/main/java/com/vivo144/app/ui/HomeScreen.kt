@@ -12,7 +12,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -125,6 +127,13 @@ fun HomeScreen(resume: Int, snack: (String) -> Unit, goGames: () -> Unit, goSett
                 color = Danger,
                 textAlign = TextAlign.Center,
             )
+            val clip = LocalClipboardManager.current
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                OutlinedButton(onClick = {
+                    clip.setText(AnnotatedString("Diagnóstico: $diag\n\n${Rms.report}"))
+                    snack("Diagnóstico copiado. Cole na conversa.")
+                }) { Text("Copiar diagnóstico completo") }
+            }
         }
         reason?.let {
             Text(
