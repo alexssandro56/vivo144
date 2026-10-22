@@ -1,0 +1,159 @@
+<resources>
+    <string name="app_name">Vivo iQOO 144FPS</string>
+    <string name="app_title">Vivo iQOO FPS Unlocker</string>
+    <string name="app_subtitle">Performance &amp; refresh rate utility</string>
+    <string name="app_version">Version 1.0</string>
+    <string name="app_about_desc">Utility for managing supported FPS and display refresh-rate configurations on compatible Vivo/iQOO devices.</string>
+
+    <!-- Device Card -->
+    <string name="device_header">DEVICE</string>
+    <string name="device_detected">Device detected</string>
+    <string name="device_not_detected">Device not detected</string>
+    <string name="device_compat_vivo">Vivo / iQOO Optimized</string>
+    <string name="device_compat_generic">Standard Android Device</string>
+    <string name="device_not_detected_help">Ensure display settings permissions are enabled or connect via ADB to unlock full hardware detection.</string>
+
+    <!-- FPS Card -->
+    <string name="target_frame_rate">Target frame rate</string>
+    <string name="fps_unit">FPS</string>
+    <string name="current_label">Current:</string>
+    <string name="target_label">Target:</string>
+    <string name="status_label">Status:</string>
+    <string name="status_ready">Ready</string>
+    <string name="status_unlocked">144 FPS unlocked</string>
+    <string name="status_applying">Applying configuration…</string>
+    <string name="status_error">Unable to apply configuration</string>
+    <string name="status_restored">Default settings restored</string>
+
+    <!-- Primary Action -->
+    <string name="btn_unlock_144">UNLOCK 144 FPS</string>
+    <string name="btn_unlock_sub">Apply the recommended configuration</string>
+    <string name="btn_applying">Applying configuration…</string>
+    <string name="btn_unlocked">144 FPS UNLOCKED</string>
+
+    <!-- Current Configuration -->
+    <string name="current_config_title">CURRENT CONFIGURATION</string>
+    <string name="cfg_current_fps">Current FPS</string>
+    <string name="cfg_target_fps">Target FPS</string>
+    <string name="cfg_refresh_rate">Refresh Rate</string>
+    <string name="cfg_unlock_status">Unlock Status</string>
+
+    <!-- Advanced Section -->
+    <string name="advanced_title">Advanced</string>
+    <string name="adv_adb_title">ADB / Wireless Debugging</string>
+    <string name="adv_adb_desc">Grant system permissions via USB or Wi-Fi</string>
+    <string name="adv_fps_title">FPS Configuration</string>
+    <string name="adv_fps_desc">Custom frame rate and refresh rate targets</string>
+    <string name="adv_diag_title">Device Diagnostics</string>
+    <string name="adv_diag_desc">Display modes, hardware specs &amp; permissions</string>
+    <string name="adv_restore_title">Restore Defaults</string>
+    <string name="adv_restore_desc">Reset display settings to system defaults</string>
+
+    <!-- Advanced Settings Screen -->
+    <string name="adv_screen_title">Advanced Settings</string>
+    <string name="sec_adb_conn">ADB CONNECTION</string>
+    <string name="sec_fps_config">FPS CONFIGURATION</string>
+    <string name="lbl_target_fps">Target FPS</string>
+    <string name="lbl_refresh_rate">Refresh Rate</string>
+    <string name="lbl_game_mode">Vivo Multi-Turbo High-FPS Mode</string>
+    <string name="lbl_game_mode_desc">Force OriginOS / FuntouchOS display compositor to hold peak frame rate</string>
+    <string name="btn_apply_config">Apply Configuration</string>
+    <string name="btn_restore_defaults">Restore Defaults</string>
+
+    <!-- ADB Screen -->
+    <string name="adb_screen_title">ADB Connection</string>
+    <string name="adb_status_lbl">ADB Status</string>
+    <string name="adb_connected">Connected</string>
+    <string name="adb_not_connected">Not connected</string>
+    <string name="adb_perm_granted">WRITE_SECURE_SETTINGS Granted</string>
+    <string name="adb_perm_missing">Permission Required</string>
+    <string name="adb_instructions_title">Instructions</string>
+    <string name="adb_step_1">1. Enable Developer Options</string>
+    <string name="adb_step_1_sub">Go to Settings &gt; About Phone &gt; tap \'Build Number\' 7 times.</string>
+    <string name="adb_step_2">2. Enable USB Debugging or Wireless Debugging</string>
+    <string name="adb_step_2_sub">Toggle USB Debugging in Developer Options.</string>
+    <string name="adb_step_3">3. Connect the device</string>
+    <string name="adb_step_3_sub">Connect to PC via USB cable or pair over Wi-Fi network.</string>
+    <string name="adb_step_4">4. Grant the required authorization</string>
+    <string name="adb_step_4_sub">Execute the command below in your ADB terminal.</string>
+    <string name="adb_cmd_label">ADB Authorization Command</string>
+    <string name="btn_copy_command">Copy Command</string>
+    <string name="btn_refresh_status">Refresh Status</string>
+    <string name="btn_open_dev_options">Open Developer Options</string>
+    <string name="cmd_copied_toast">Command copied to clipboard</string>
+
+    <!-- Diagnostics Screen -->
+    <string name="diag_screen_title">Device Diagnostics</string>
+    <string name="diag_device_model">Device Model</string>
+    <string name="diag_manufacturer">Manufacturer</string>
+    <string name="diag_android_version">Android Version</string>
+    <string name="diag_build_number">Build Number</string>
+    <string name="diag_display_refresh_rate">Display Refresh Rate</string>
+    <string name="diag_supported_rates">Supported Refresh Rates</string>
+    <string name="diag_current_fps">Current FPS</string>
+    <string name="diag_adb_status">ADB Status</string>
+    <string name="diag_device_compat">Device Compatibility</string>
+    <string name="diag_supported">Supported</string>
+    <string name="diag_144_available">144 Hz available</string>
+    <string name="diag_wireless_debug_req">Wireless debugging required</string>
+    <string name="diag_connected">Connected</string>
+    <string name="diag_generic_fallback">Generic display API</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_restore_title">Restore default settings?</string>
+    <string name="dialog_restore_msg">This will remove the FPS configuration applied by this application and reset display refresh rate to dynamic default.</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_restore">Restore</string>
+
+    <!-- About Screen -->
+    <string name="about_screen_title">About</string>
+    <string name="about_github">GitHub Project</string>
+    <string name="about_licenses">Open Source Licenses</string>
+    <string name="about_privacy">Privacy</string>
+    <string name="about_safety_notice">Safety &amp; Transparency</string>
+    <string name="about_safety_desc">This utility uses standard Android DisplayMode and Settings APIs with optional Secure Settings authorization. No root required.</string>
+    <!-- Settings & Theme Customizer -->
+    <string name="settings_screen_title">Settings</string>
+    <string name="settings_screen_subtitle">Theme &amp; App Preferences</string>
+    <string name="theme_customizer_title">THEME &amp; APPEARANCE</string>
+    <string name="theme_mode_title">Theme Mode</string>
+    <string name="theme_mode_system">System Default</string>
+    <string name="theme_mode_light">Light</string>
+    <string name="theme_mode_dark">Dark</string>
+    <string name="theme_amoled_pure_black">Pure AMOLED Black</string>
+    <string name="theme_amoled_pure_black_desc">Pitch black (#000000) background for maximum OLED battery savings</string>
+    <string name="accent_color_title">Material 3 Accent Color</string>
+    <string name="accent_color_subtitle">Select or customize the primary color scheme</string>
+    <string name="custom_accent_picker_title">Custom Color Studio</string>
+    <string name="custom_accent_picker_desc">Fine-tune RGB channels or enter a HEX color code</string>
+    <string name="btn_reset_theme">Reset Theme to Default</string>
+    <string name="theme_preview_title">LIVE PREVIEW</string>
+
+    <!-- Quick Settings Tile -->
+    <string name="tile_high_performance_label">High Performance</string>
+    <string name="tile_high_performance_sub_active">144 FPS / 144Hz Active</string>
+    <string name="tile_high_performance_sub_inactive">Standard (60 FPS)</string>
+    <string name="tile_high_performance_desc">Quickly toggle 144 FPS Ultra Performance Mode</string>
+    <string name="tile_toast_enabled">High Performance Mode Activated (144 FPS / 144 Hz)</string>
+    <string name="tile_toast_disabled">High Performance Mode Disabled (60 FPS)</string>
+    <string name="tile_add_qs_button">Add Quick Settings Tile</string>
+    <string name="tile_add_qs_desc">Swipe down your notification shade to toggle High Performance Mode with one tap</string>
+
+    <!-- Real-Time FPS Overlay Service -->
+    <string name="overlay_service_name">FPS Overlay Service</string>
+    <string name="overlay_notification_title">Vivo Real-Time FPS Overlay Active</string>
+    <string name="overlay_notification_desc">Monitoring frame rates across active games</string>
+    <string name="overlay_notification_action_stop">Stop Overlay</string>
+    <string name="overlay_notification_action_settings">Settings</string>
+    <string name="overlay_permission_title">Display Over Other Apps</string>
+    <string name="overlay_permission_desc">Enable overlay permission so the FPS counter HUD can float over your games</string>
+    <string name="overlay_permission_grant_btn">Grant Overlay Permission</string>
+    <string name="overlay_accessibility_title">Game Auto-Launch (Accessibility)</string>
+    <string name="overlay_accessibility_desc">Automatically pop up the FPS counter whenever a recognized game is launched</string>
+    <string name="overlay_accessibility_btn">Enable Accessibility Service</string>
+    <string name="overlay_status_active">Overlay HUD Running</string>
+    <string name="overlay_status_inactive">Overlay HUD Stopped</string>
+    <string name="overlay_btn_start">Start Floating FPS Counter</string>
+    <string name="overlay_btn_stop">Stop Floating Counter</string>
+    <string name="accessibility_service_desc">Monitors game app launches to automatically display the real-time Vivo FPS counter overlay HUD over supported games.</string>
+</resources>
