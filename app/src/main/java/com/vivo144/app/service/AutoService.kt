@@ -105,7 +105,7 @@ class AutoService : Service() {
             if (want != voted) {
                 if (want) Rms.vote(Prefs.fps) else Rms.release()
                 voted = want
-            } else if (want && tick % 10 == 0) {
+            } else if (want && tick % 10 == 0 && Rms.path != Rms.Path.DEX) {
                 Rms.vote(Prefs.fps) // cheap one-way refresh; same handle replaces the vote
             }
             notice(if (want) "${label(fg!!)} → ${Prefs.fps} Hz" else "Aguardando um jogo…")
@@ -115,9 +115,10 @@ class AutoService : Service() {
             notice("Monitor de Hz")
         }
         if (Prefs.hud && hud != null) {
-            val r = Rms.rate()
-            val text = if (r == null) "rms ?" else "${Math.round(r)} Hz" + if (voted == true) " ●" else ""
-            val good = r != null && Math.round(r) >= Prefs.fps
+            // In the app_process path every read starts a runtime; don't do that during a game.
+            val r = if (Rms.path == Rms.Path.DEX) null else Rms.rate()
+            val text = if (r == null) (if (voted == true) "${Prefs.fps} Hz ●" else "LTPO") else "${Math.round(r)} Hz" + if (voted == true) " ●" else ""
+            val good = if (r == null) voted == true else Math.round(r) >= Prefs.fps
             ui.post {
                 hud?.text = text
                 hud?.setTextColor(if (good) 0xFF3DFFB0.toInt() else 0xFFFFC266.toInt())

@@ -7,7 +7,6 @@ import android.os.Parcel
 import android.provider.Settings
 import android.view.Display
 import rikka.shizuku.ShizukuBinderWrapper
-import rikka.shizuku.SystemServiceHelper
 
 /**
  * vivo's "rms" binder (com.vivo.rms.IRM), spoken like the framework's own
@@ -26,44 +25,135 @@ object Rms {
     private const val FLAGS = 15     // own config bits | private fps | vsync dfps | ignore brightness
     private const val PRIORITY = 100
 
-    enum class Path { DIRECT, SHIZUKU, NONE }
+    /**
+     * DIRECT  – the app looked rms up itself (works where SELinux allows it)
+     * SHIZUKU – rms was looked up *by the Shizuku server* (shell), so the
+     *           lookup is not blocked; calls go through ShizukuBinderWrapper
+     * DEX     – last resort: this APK's RmsCli run via app_process as shell
+     *           (the same technique as RmsVote.dex, with our own code)
+     */
+    enum class Path { DIRECT, SHIZUKU, DEX, NONE }
 
     @Volatile var path = Path.NONE
         private set
+    /** What happened on the last lookup, shown in the UI. */
+    @Volatile var diag = ""
+        private set
     @Volatile private var cached: IBinder? = null
+    @Volatile private var dexReady = false
+    @Volatile private var lastTry = 0L
+
+    lateinit var app: Context
 
     @Synchronized
     fun binder(): IBinder? {
         cached?.let { if (it.isBinderAlive) return it }
         cached = null
+        if (path == Path.DEX && dexReady) return null
+        // Don't hammer the lookup when nothing works.
+        val now = System.currentTimeMillis()
+        if (path == Path.NONE && now - lastTry < 3000) return null
+        lastTry = now
+        val notes = mutableListOf<String>()
+
+        // 1) Direct lookup from the app process.
         try {
             val b = Class.forName("android.os.ServiceManager")
                 .getMethod("getService", String::class.java)
                 .invoke(null, "rms") as IBinder?
-            if (b != null && read(b) != null) {
-                path = Path.DIRECT
-                cached = b
-                return b
+            when {
+                b == null -> notes += "direto: rms oculto para apps"
+                read(b) == null -> notes += "direto: rms não respondeu"
+                else -> { path = Path.DIRECT; diag = "Direto"; cached = b; return b }
             }
-        } catch (_: Throwable) { }
-        if (ShizukuState.ready(1500)) {
+        } catch (t: Throwable) {
+            notes += "direto: ${t.cause ?: t}"
+        }
+
+        if (!ShizukuState.ready(1500)) {
+            notes += "Shizuku indisponível"
+            path = Path.NONE; diag = notes.joinToString(" · ")
+            return null
+        }
+
+        // 2) Ask servicemanager *through Shizuku*, so the lookup runs as shell.
+        try {
+            val raw = lookupViaShizuku("rms")
+            if (raw == null) {
+                notes += "shizuku: servicemanager não devolveu rms"
+            } else {
+                val w = ShizukuBinderWrapper(raw)
+                if (read(w) != null) {
+                    path = Path.SHIZUKU; diag = "Shizuku (busca como shell)"; cached = w; return w
+                }
+                notes += "shizuku: rms não respondeu"
+            }
+        } catch (t: Throwable) {
+            notes += "shizuku: ${t.cause ?: t}"
+        }
+
+        // 3) Our own RmsCli through app_process as shell, like the official RmsVote CLI.
+        if (prepareDex()) {
+            path = Path.DEX; diag = "Shell via app_process"
+            return null
+        }
+        notes += "app_process: $dexError"
+        path = Path.NONE; diag = notes.joinToString(" · ")
+        return null
+    }
+
+    private fun lookupViaShizuku(name: String): IBinder? {
+        val ctxObj = Class.forName("com.android.internal.os.BinderInternal")
+            .getMethod("getContextObject").invoke(null) as IBinder
+        val sm = Class.forName("android.os.IServiceManager\$Stub")
+            .getMethod("asInterface", IBinder::class.java)
+            .invoke(null, ShizukuBinderWrapper(ctxObj))!!
+        for (m in listOf("checkService", "getService", "checkService2", "getService2")) {
+            val r = try {
+                sm.javaClass.getMethod(m, String::class.java).invoke(sm, name)
+            } catch (_: NoSuchMethodException) { continue }
+            unwrap(r)?.let { return it }
+        }
+        return null
+    }
+
+    /** Android 16 may return a `Service` union instead of a bare IBinder. */
+    private fun unwrap(r: Any?): IBinder? {
+        if (r == null) return null
+        if (r is IBinder) return r
+        for (getter in listOf("getServiceWithMetadata", "getBinder")) {
             try {
-                val raw = SystemServiceHelper.getSystemService("rms")
-                if (raw != null) {
-                    val w = ShizukuBinderWrapper(raw)
-                    path = Path.SHIZUKU
-                    cached = w
-                    return w
+                val v = r.javaClass.getMethod(getter).invoke(r)
+                if (v is IBinder) return v
+                if (v != null) {
+                    val f = v.javaClass.getField("service").get(v)
+                    if (f is IBinder) return f
                 }
             } catch (_: Throwable) { }
         }
-        path = Path.NONE
-        return null
+        return try { r.javaClass.getField("service").get(r) as? IBinder } catch (_: Throwable) { null }
+    }
+
+    @Volatile private var dexError = ""
+
+    /** Checks that `app_process` can run our RmsCli as shell and reach rms. */
+    private fun prepareDex(): Boolean {
+        if (dexReady) return true
+        val r = dex("get")
+        dexReady = r.ok && r.out.startsWith("rate=")
+        dexError = if (dexReady) "" else r.all.take(160)
+        return dexReady
+    }
+
+    private fun dex(args: String): Shell.Result {
+        val apk = app.applicationInfo.sourceDir
+        return Shell.exec("CLASSPATH=${Shell.q(apk)} app_process /system/bin com.vivo144.app.core.RmsCli $args")
     }
 
     /** Votes [fps] in the FixRate scene. Voting again with the same handle replaces it. */
     fun vote(fps: Int): Boolean {
-        val b = binder() ?: return false
+        val b = binder()
+        if (b == null) return path == Path.DEX && dex("set $fps").ok
         val d = Parcel.obtain()
         return try {
             d.writeLong(HANDLE)
@@ -91,7 +181,8 @@ object Rms {
     }
 
     fun release(): Boolean {
-        val b = binder() ?: return false
+        val b = binder()
+        if (b == null) return path == Path.DEX && dex("release 0 $HANDLE").ok
         val d = Parcel.obtain()
         return try {
             d.writeInt(0)
@@ -104,8 +195,22 @@ object Rms {
         }
     }
 
+    @Volatile private var dexRate: Float? = null
+    @Volatile private var dexRateAt = 0L
+
     /** Rate the vendor has applied, or null when rms can't be reached. */
-    fun rate(): Float? = binder()?.let { read(it) }
+    fun rate(): Float? {
+        val b = binder()
+        if (b != null) return read(b)
+        if (path != Path.DEX) return null
+        // app_process starts a whole runtime: read at most every 5 s.
+        val now = System.currentTimeMillis()
+        if (now - dexRateAt > 5000) {
+            dexRateAt = now
+            dexRate = Regex("[0-9]+(\\.[0-9]+)?").find(dex("get").out)?.value?.toFloatOrNull()
+        }
+        return dexRate
+    }
 
     private fun read(b: IBinder): Float? {
         val d = Parcel.obtain()

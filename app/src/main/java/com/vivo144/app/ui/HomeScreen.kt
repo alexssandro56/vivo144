@@ -34,6 +34,7 @@ fun HomeScreen(resume: Int, snack: (String) -> Unit, goGames: () -> Unit, goSett
     var rate by remember { mutableStateOf<Float?>(null) }
     var path by remember { mutableStateOf(Rms.Path.NONE) }
     var reason by remember { mutableStateOf<String?>(null) }
+    var diag by remember { mutableStateOf("") }
     val usage = remember(resume) { Apps.hasUsageAccess(ctx) }
     val gameCount = remember(resume) { Prefs.games.size }
 
@@ -41,7 +42,7 @@ fun HomeScreen(resume: Int, snack: (String) -> Unit, goGames: () -> Unit, goSett
         mode = Prefs.mode; fps = Prefs.fps
         while (true) {
             val r = withContext(Dispatchers.IO) { Rms.rate() }
-            rate = r; path = Rms.path
+            rate = r; path = Rms.path; diag = Rms.diag
             delay(500)
         }
     }
@@ -88,6 +89,7 @@ fun HomeScreen(resume: Int, snack: (String) -> Unit, goGames: () -> Unit, goSett
             when (path) {
                 Rms.Path.DIRECT -> Pill("Direto", Neon)
                 Rms.Path.SHIZUKU -> Pill("Shizuku", Cyan)
+                Rms.Path.DEX -> Pill("Shell", Cyan)
                 Rms.Path.NONE -> Pill("Sem acesso", Danger)
             }
         }
@@ -114,6 +116,15 @@ fun HomeScreen(resume: Int, snack: (String) -> Unit, goGames: () -> Unit, goSett
                     )
                 }
             }
+        }
+        if (path == Rms.Path.NONE && diag.isNotEmpty()) {
+            Text(
+                "Diagnóstico: $diag",
+                Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.bodySmall,
+                color = Danger,
+                textAlign = TextAlign.Center,
+            )
         }
         reason?.let {
             Text(
